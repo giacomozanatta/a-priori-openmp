@@ -67,12 +67,11 @@ map<vector<int>, int> Transactions::generateL(map<vector<int>, int> C, int minSu
     map<vector<int>, int> L;
     #pragma omp parallel
     {
-        map<vector<int>, int> localL = L;
+        map<vector<int>, int> localL;
         #pragma omp for
         for (int i = 0; i< C.size(); i++) {
             auto it = C.begin();
             advance(it, i);
-
             // for every row in C, check if the support is > minSupport
             int supp = getRowSupport(it->first);
             if (supp>minSupport) {
@@ -104,24 +103,33 @@ map<vector<int>, int> Transactions::generateC(map<vector<int>, int> L) {
 
 map<vector<int>, int> Transactions::joinPhase(map<vector<int>, int> L) {
     map<vector<int>, int> joinedC;
-    #pragma omp parallel for
-    for (int i = 0; i < L.size(); i++) {
-        cout << "C start line " << i << endl;
-        auto it = L.begin();
-        advance(it, i);
-        vector<int> row = it->first;
-        auto internalIt = it;
-        internalIt++;
-        while( internalIt != L.end()) {
-            for (auto item:internalIt->first) {
-                if (find(row.begin(), row.end(), item) == row.end()) { // not found
-                    vector<int> joinItems = row;
-                    joinItems.push_back(item);
-                    sort(joinItems.begin(), joinItems.end());
-                    joinedC[joinItems] ++;
-                }
-            }
+    #pragma omp parallel
+    {
+        map<vector<int>, int> localC;
+        #pragma omp for
+        for (int i = 0; i < L.size(); i++) {
+            auto it = L.begin();
+            advance(it, i);
+            vector<int> row = it->first;
+            auto internalIt = it;
             internalIt++;
+            while( internalIt != L.end()) {
+                for (auto item:internalIt->first) {
+                    if (find(row.begin(), row.end(), item) == row.end()) { // not found
+                        vector<int> joinItems = row;
+                        joinItems.push_back(item);
+                        sort(joinItems.begin(), joinItems.end());
+                        localC[joinItems] ++;
+                    }
+                }
+                internalIt++;
+            }
+        }
+        #pragma omp critical
+        {
+            for (auto item:localC) {
+                joinedC[item.first] = item.second;
+            }
         }
     }
     return joinedC;
@@ -129,17 +137,30 @@ map<vector<int>, int> Transactions::joinPhase(map<vector<int>, int> L) {
 
 map<vector<int>, int> Transactions::prunePhase(map<vector<int>, int> C, map<vector<int>, int> L) {
     map<vector<int>, int> prunedC;
-    for (auto row: C) {
-        int i;
-        for(i=0; i<row.first.size();i++){
-            vector<int> rowSubset = row.first;
-            rowSubset.erase(rowSubset.begin()+i);
-            if (!L[rowSubset]) {
-                break;
+     #pragma omp parallel
+    {
+        map<vector<int>, int> localC;
+        #pragma omp for
+        for (int i = 0; i < C.size(); i++) {
+            auto row = C.begin();
+            advance(row, i);
+            int i;
+            for(i=0; i<row->first.size();i++){
+                vector<int> rowSubset = row->first;
+                rowSubset.erase(rowSubset.begin()+i);
+                if (!L[rowSubset]) {
+                    break;
+                }
+            }
+            if(i==row->first.size()){
+                localC[row->first]++;
             }
         }
-        if(i==row.first.size()){
-            prunedC[row.first]++;
+        #pragma omp critical
+        {
+            for (auto item:localC) {
+                prunedC[item.first]++;
+            }
         }
     }
     return prunedC;
@@ -200,7 +221,7 @@ void apriori(Transactions *transactions, int minSupport) {
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-    cout << "apriori serial total time: " << elapsed.count() << "ms." << endl;
+    cout << "apriori parallel total time: " << elapsed.count() << "ms." << endl;
 }
 
 
