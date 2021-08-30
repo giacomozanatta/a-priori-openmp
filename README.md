@@ -21,6 +21,13 @@ A.Y. 2020/2021
 
 
 ## Introduction
+- Compile with **g++-11 -fopenmp -o main main.cpp**  
+- You must pass 2 arguments when executing the code:  
+  - file path (file must contains transactions, one per line, each transaction item must be separated by a space)  
+  - min support (in the number of transaction).  
+- The serial version is on the serial branch.  
+- The parallel version is on the parallel branch.  
+- Compile with **g++-11 -fopenmp -o main main.cpp -O3** for optimization. 
 ### Frequent Itemset Mining 
 This project aims to implements a Frequent-Itemset Mining algorithm, both in sequential and parallel way, and to analyze and discuss performance and implementation choices.
 The Frequent Itemset problems is defined as follows:  
@@ -254,7 +261,9 @@ In the table we report the different time taken for every step and for every num
 | 20           | 218774ms       | 20622ms | 479ms | 118ms | 240034ms
 | 24           | 234720ms      | 23873ms | 480ms | 105ms | 259224ms
 | 28           | 21832ms       | 21832ms  | 277ms | 92ms | 249857ms
-| 32           | 220337ms    | 22231ms | 457ms | 106ms | 243173ms
+| 32           | 220337ms    | 22231ms | 457ms | 106ms | 243173ms  
+  
+
 ![](image.png)
 This is the graph obtained by analyzing total time for every number of threads.  
 We not that when we reach 16/20 number of threads we have the best performance.  
