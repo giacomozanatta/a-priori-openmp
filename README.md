@@ -44,3 +44,8 @@ This dataset is not dense in terms of items and contains circa 80000 transaction
 Other dataset tested are the chess ones, but this 
 ## Parallel Implementation with OPENMP
 Now we are going to analyze how to introduce parallelism on this project.  
+Fist, we need to find the part of the code that can be parallelized.  
+- Every apriori phase depends on the previous ones, so we cannot apply parallelization here.  
+- Instead, we can try to add parallelization on the internal C and L set generation.
+## Analysis
+

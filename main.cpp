@@ -6,7 +6,7 @@
 #include <vector>
 #include <set>
 #include <map>
-
+#include <omp.h>
 using namespace std;
 
 class Transactions {
@@ -65,11 +65,25 @@ bool Transactions::subsetOfTransaction(vector<int> row, vector<int> transaction)
  */
 map<vector<int>, int> Transactions::generateL(map<vector<int>, int> C, int minSupport) {
     map<vector<int>, int> L;
-    for (auto&row:C) {
-        // for every row in C, check if the support is > minSupport
-        int supp = getRowSupport(row.first);
-        if (supp>minSupport) {
-            L[row.first] = supp;
+    #pragma omp parallel
+    {
+        map<vector<int>, int> localL = L;
+        #pragma omp for
+        for (int i = 0; i< C.size(); i++) {
+            auto it = C.begin();
+            advance(it, i);
+
+            // for every row in C, check if the support is > minSupport
+            int supp = getRowSupport(it->first);
+            if (supp>minSupport) {
+                localL[it->first] = supp;
+            }
+        }
+        #pragma omp critical
+        {
+            for (auto item:localL) {
+                L[item.first] = item.second;
+            }
         }
     }
     return L;
@@ -90,7 +104,11 @@ map<vector<int>, int> Transactions::generateC(map<vector<int>, int> L) {
 
 map<vector<int>, int> Transactions::joinPhase(map<vector<int>, int> L) {
     map<vector<int>, int> joinedC;
-    for (auto it=L.begin(); it!=L.end(); ++it) {
+    #pragma omp parallel for
+    for (int i = 0; i < L.size(); i++) {
+        cout << "C start line " << i << endl;
+        auto it = L.begin();
+        advance(it, i);
         vector<int> row = it->first;
         auto internalIt = it;
         internalIt++;
