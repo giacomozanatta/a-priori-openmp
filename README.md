@@ -1,7 +1,15 @@
 Author: Zanatta Giacomo - 859156  
 A.Y. 2020/2021
 # High Performance Computing Project
-## QuickStart
+## QuickStart  
+- Compile with **g++-11 -fopenmp -o main main.cpp**  
+- You must pass 2 arguments when executing the code:  
+  - **file path** (file must contains transactions, one per line, each transaction item must be separated by a space)  
+  - **min support** (in the number of transaction).  
+- The serial version is on the serial branch.  
+- The parallel version is on the parallel branch.  
+- Compile with **g++-11 -fopenmp -o main main.cpp -O3** for optimization. 
+- Set the number of threads with **export OMP_NUM_THREADS=[NUMBER]**
 # Table of Contents
 1. [Introduction](#Introduction)
    1. [Frequent Itemset Mining](#frequent-itemset-mining )
@@ -21,13 +29,6 @@ A.Y. 2020/2021
 
 
 ## Introduction
-- Compile with **g++-11 -fopenmp -o main main.cpp**  
-- You must pass 2 arguments when executing the code:  
-  - file path (file must contains transactions, one per line, each transaction item must be separated by a space)  
-  - min support (in the number of transaction).  
-- The serial version is on the serial branch.  
-- The parallel version is on the parallel branch.  
-- Compile with **g++-11 -fopenmp -o main main.cpp -O3** for optimization. 
 ### Frequent Itemset Mining 
 This project aims to implements a Frequent-Itemset Mining algorithm, both in sequential and parallel way, and to analyze and discuss performance and implementation choices.
 The Frequent Itemset problems is defined as follows:  
@@ -49,18 +50,17 @@ The A-Priori implementation was done as follows:
 - Since we are working with a list of transactions, and a transaction is a set of items, we store the transaction in a vector of vector of int. We scan transaction sequentially, so using vectors fit well for this requirement.  
 - When we parse the file in the transaction structure, we create also another data structure that contains the counting of items. This avoid to scan the whole transaction list another time when we generate C1. We use a map from int (item) to int (the number of this item in transactions) for this purpose.  
 - The first step of A-Priori is to get the first Candidate set. We use the previous mentioned map to generate C1, i.e. the candidate set of itemset with length 1.  
-  - The candidate set has type of **map<vector<int>, <int>>**. We use this data structure for the main reason that accessing elements in map has logarithmic complexity. The key is **vector<int>** type because we need to store itemsets, that could have different length, step-based (i.e. on step 1, all item contains only one element, on step 2, we have two elements and so on).  
+  - The candidate set has type of **map<vector\<int\>, \<int\>\>**. We use this data structure for the main reason that accessing elements in map has logarithmic complexity. The key is **vector\<int\>** type because we need to store itemsets, that could have different length, step-based (i.e. on step 1, all item contains only one element, on step 2, we have two elements and so on).  
 - While the current candidate set is not empty:  
-  - We generate L: for every item in the current candidate set (that is the key of the C map, **vector<int>**), we count of many times it appears in all transasctions (support). If the support is above the minimum support, this item is inserted into the set L.
+  - We generate L: for every item in the current candidate set (that is the key of the C map, **vector\<int\>**), we count of many times it appears in all transasctions (support). If the support is above the minimum support, this item is inserted into the set L.
   - We generate the next C starting from L. The process of generating C consists of two phase:
     - joining: the joining phase will merge two different sets of length N-1 to K sets of length N.
     - prune: the pruning phase removes sets in C of length N that does not have all the subsets in L.
 
 ## Dataset
-We tested the implementation with the retail dataset.  
-This dataset is not dense in terms of items and contains circa 80000 transactions of different length.  
-Other dataset tested are the chess ones, but this has only 75 different item with fixed transaction length of 35 and only 3000 transactions. Using the chess dataset we expect to find a lot of frequent itemsets.  
-The retail dataset consists of 88162 transactions.  
+We test the implementation with the retail dataset.  
+This dataset is not dense in terms of items and contains circa 88000 transactions of different length.  
+Other dataset tested are the chess ones, but this has only 75 different items with fixed transaction length of 35 and only 3000 transactions. Using the chess dataset we expect to find a lot of frequent itemsets.  
 ## Parallel Implementation with OPENMP
 Now we are going to analyze how to introduce parallelism on this project.  
 Fist, we need to find the part of the code that can be parallelized.  
@@ -266,8 +266,8 @@ In the table we report the different time taken for every step and for every num
 
 ![](image.png)
 This is the graph obtained by analyzing total time for every number of threads.  
-We not that when we reach 16/20 number of threads we have the best performance.  
-This is because adding threads not always make the performance better, because we need to keep into account that we have some critical phase, needs to be performed serially for every threads and this is prune to some overhead.
+We note that when we reach 16/20 number of threads we have the best performance.  
+This is because adding threads not always make the performance better, because we need to keep into account that we have some critical phase, that needs to be performed serially for every threads and this is prune to some overhead.
 ### Auto vectorization and loop optimization
 For doing this, we need to change our data structure in array. C++ map is implemented using trees and this is a tradeoff: we perform a lot of searches in the dataset so a tree fits weel. If we use array we need to keep the data sorted for better accessing elements.  
 For this reason we prefer to keep the map data structure.
@@ -278,7 +278,8 @@ For this reason we prefer to keep the map data structure.
 | -----------       | ----------- | ----------- | ----------- | ----------- | ----------- |
 | 16          | 95328ms       | 8391ms | 2089ms | 181ms | 103949ms
 
-With the -O3 flag, the code is compiled in a more efficiently way: with 16 threads we took only 103949ms (1.7 min. circa) to finish instead of 240183ms (4 min. circa).
+With the -O3 flag, the code is compiled in a more efficiently way: with 16 threads we took only 103949ms (1.7 min. circa) to finish instead of 240183ms (4 min. circa).  
+**Sequential implemenation with -O3 flag tooks 567555ms.**  
 ## Notes
 ### Map Reduce approach
 - We can also use a map-reduce approach to perform this task:  
