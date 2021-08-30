@@ -6,7 +6,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <omp.h>
 
 using namespace std;
 
@@ -189,13 +188,6 @@ void apriori(Transactions *transactions, int minSupport) {
 
 
 int main(int argc, char **argv) {
-    #pragma omp parallel
-    {
-
-        printf("Hello World... from thread = %d\n",
-               omp_get_thread_num());
-    }
-    // Ending of parallel region
     if (argc < 3) {
         cout << "Usage: {executableName} {filePath} {minSupport}" << endl;
         exit(1);
@@ -204,7 +196,7 @@ int main(int argc, char **argv) {
     Transactions transactions; // every transaction is a set of int (items)
     cout << "Parse file " << argv[1] << "..." << endl;
     parseFile(argv[1], &transactions);
-    cout << "Finding frequent itemset with min support -------  " << argv[2] << endl;
+    cout << "Finding frequent itemset with min support of " << argv[2] << endl;
     apriori(&transactions, stoi(argv[2]));
     cout << "Done!" << endl;
     // we parse the file in Transaction (every row is a transaction)
