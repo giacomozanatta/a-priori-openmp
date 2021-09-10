@@ -1,4 +1,4 @@
-# Parallel A-Priori with OPENMP 
+# Parallel Apriori with OPENMP 
 ## QuickStart  
 - Compile with **g++-11 -fopenmp -o main main.cpp**  
 - You must pass 2 arguments when executing the code:  
