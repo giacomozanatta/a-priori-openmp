@@ -1,6 +1,4 @@
-Author: Zanatta Giacomo - 859156  
-A.Y. 2020/2021
-# High Performance Computing Project
+# Parallel A-Priori with OPENMP 
 ## QuickStart  
 - Compile with **g++-11 -fopenmp -o main main.cpp**  
 - You must pass 2 arguments when executing the code:  
